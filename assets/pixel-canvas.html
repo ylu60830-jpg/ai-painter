@@ -1,0 +1,262 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>AI 像素画板</title>
+<style>
+  * { margin: 0; padding: 0; box-sizing: border-box; }
+  body {
+    background: #1e1e1e;
+    display: flex; flex-direction: column; align-items: center;
+    min-height: 100vh; font-family: 'Courier New', monospace;
+    padding: 14px; user-select: none;
+  }
+  h1 { color: #999; font-size: 12px; letter-spacing: 3px; margin-bottom: 8px; font-weight: normal; }
+
+  .toolbar { display: flex; gap: 6px; margin: 6px 0; align-items: center; flex-wrap: wrap; justify-content: center; }
+  .toolbar button, .toolbar select {
+    font-family: 'Courier New', monospace; font-size: 10px;
+    padding: 4px 10px; border: 2px solid #555; background: #2a2a2a;
+    color: #bbb; cursor: pointer; letter-spacing: 1px;
+  }
+  .toolbar button:hover, .toolbar select:hover { background: #3a3a3a; }
+
+  /* ═══ 调色板：36 色，分组排列 ═══ */
+  .palette-section { margin-bottom: 4px; }
+  .palette-label {
+    color: #666; font-size: 8px; letter-spacing: 2px;
+    text-align: center; margin: 4px 0 2px;
+  }
+  .palette-row { display: flex; gap: 2px; justify-content: center; flex-wrap: wrap; }
+
+  .color-swatch {
+    width: 22px; height: 22px; border: 2px solid transparent;
+    cursor: pointer; transition: transform 0.08s; position: relative;
+  }
+  .color-swatch:hover { transform: scale(1.25); z-index: 2; }
+  .color-swatch.current { border-color: #fff; box-shadow: 0 0 6px rgba(255,255,255,0.5); }
+
+  /* ═══ 画布 ═══ */
+  .canvas-grid { display: grid; gap: 1px; background: #111; padding: 2px; border: 2px solid #444; }
+  .grid-cell { background: #222; cursor: crosshair; }
+  .grid-cell:hover { outline: 1px solid rgba(255,255,255,0.2); outline-offset: -1px; z-index: 1; }
+
+  .status { color: #777; font-size: 10px; margin-top: 8px; letter-spacing: 1px; }
+</style>
+</head>
+<body>
+
+<h1>PIXEL CANVAS</h1>
+
+<!-- ═══ 调色板 36 色 ═══ -->
+<div id="palette">
+  <!-- 无色系 -->
+  <div class="palette-label">GRAYSCALE</div>
+  <div class="palette-row">
+    <span class="color-swatch current" data-color="#111111" style="background:#111" title="纯黑"></span>
+    <span class="color-swatch" data-color="#333333" style="background:#333" title="深黑"></span>
+    <span class="color-swatch" data-color="#555555" style="background:#555" title="暗灰"></span>
+    <span class="color-swatch" data-color="#777777" style="background:#777" title="中灰"></span>
+    <span class="color-swatch" data-color="#999999" style="background:#999" title="浅灰"></span>
+    <span class="color-swatch" data-color="#CCCCCC" style="background:#CCC" title="亮灰"></span>
+    <span class="color-swatch" data-color="#FFFFFF" style="background:#FFF" title="纯白"></span>
+    <span class="color-swatch" data-color="#00000000" style="background:repeating-linear-gradient(45deg,#555 0px,#555 3px,#333 3px,#333 6px)" title="橡皮"></span>
+  </div>
+
+  <!-- 暖色系 -->
+  <div class="palette-label">WARM</div>
+  <div class="palette-row">
+    <span class="color-swatch" data-color="#8B0000" style="background:#8B0000" title="暗红"></span>
+    <span class="color-swatch" data-color="#CC3333" style="background:#C33" title="红色"></span>
+    <span class="color-swatch" data-color="#FF6B6B" style="background:#FF6B6B" title="亮红"></span>
+    <span class="color-swatch" data-color="#E8553A" style="background:#E8553A" title="橙红"></span>
+    <span class="color-swatch" data-color="#F0A040" style="background:#F0A040" title="橙色"></span>
+    <span class="color-swatch" data-color="#FFD080" style="background:#FFD080" title="亮橙"></span>
+    <span class="color-swatch" data-color="#F0C840" style="background:#F0C840" title="黄色"></span>
+    <span class="color-swatch" data-color="#FFE082" style="background:#FFE082" title="淡黄"></span>
+  </div>
+
+  <!-- 冷色系 -->
+  <div class="palette-label">COOL</div>
+  <div class="palette-row">
+    <span class="color-swatch" data-color="#1B5E20" style="background:#1B5E20" title="暗绿"></span>
+    <span class="color-swatch" data-color="#4CAF50" style="background:#4CAF50" title="绿色"></span>
+    <span class="color-swatch" data-color="#8BC34A" style="background:#8BC34A" title="嫩绿"></span>
+    <span class="color-swatch" data-color="#C8E6C9" style="background:#C8E6C9" title="淡绿"></span>
+    <span class="color-swatch" data-color="#0D47A1" style="background:#0D47A1" title="暗蓝"></span>
+    <span class="color-swatch" data-color="#4A90D9" style="background:#4A90D9" title="蓝色"></span>
+    <span class="color-swatch" data-color="#64B5F6" style="background:#64B5F6" title="亮蓝"></span>
+    <span class="color-swatch" data-color="#B3E5FC" style="background:#B3E5FC" title="淡蓝"></span>
+  </div>
+
+  <!-- 特殊色 -->
+  <div class="palette-label">SPECIAL</div>
+  <div class="palette-row">
+    <span class="color-swatch" data-color="#7B1FA2" style="background:#7B1FA2" title="暗紫"></span>
+    <span class="color-swatch" data-color="#AB47BC" style="background:#AB47BC" title="紫色"></span>
+    <span class="color-swatch" data-color="#F06292" style="background:#F06292" title="粉色"></span>
+    <span class="color-swatch" data-color="#F8BBD0" style="background:#F8BBD0" title="淡粉"></span>
+    <span class="color-swatch" data-color="#CD6E58" style="background:#CD6E58" title="暖棕(Clawd)"></span>
+    <span class="color-swatch" data-color="#8D6E63" style="background:#8D6E63" title="棕色"></span>
+    <span class="color-swatch" data-color="#5D4037" style="background:#5D4037" title="深棕"></span>
+    <span class="color-swatch" data-color="#FFCC80" style="background:#FFCC80" title="肤色"></span>
+    <span class="color-swatch" data-color="#FFD54F" style="background:#FFD54F" title="金色"></span>
+    <span class="color-swatch" data-color="#CFD8DC" style="background:#CFD8DC" title="蓝灰"></span>
+    <span class="color-swatch" data-color="#90A4AE" style="background:#90A4AE" title="金属灰"></span>
+    <span class="color-swatch" data-color="#607D8B" style="background:#607D8B" title="暗蓝灰"></span>
+  </div>
+</div>
+
+<!-- ═══ 工具栏 ═══ -->
+<div class="toolbar">
+  <span style="color:#666;font-size:10px;">尺寸</span>
+  <select id="size-select">
+    <option value="16">16</option>
+    <option value="24">24</option>
+    <option value="32" selected>32</option>
+    <option value="48">48</option>
+  </select>
+  <button id="btn-resize">切换</button>
+  <span style="color:#444;">|</span>
+  <button id="btn-clear">清空</button>
+  <button id="btn-fill">填充</button>
+  <button id="btn-undo">撤销</button>
+  <button id="btn-export">导出PNG</button>
+  <span class="status" id="status">32×32 · 就绪</span>
+</div>
+
+<!-- ═══ 画布 ═══ -->
+<div class="canvas-grid" id="canvas"></div>
+
+<script>
+  let SIZE = 32;
+  let CELL = 14;  // px per cell, adjusts with size
+  let currentColor = '#111111';
+  let grid = [];
+  let undoStack = [];
+
+  const canvasEl = document.getElementById('canvas');
+  const status = document.getElementById('status');
+
+  function cellPx() {
+    if (SIZE <= 16) return 28;
+    if (SIZE <= 24) return 18;
+    if (SIZE <= 32) return 14;
+    return 10;  // 48×48
+  }
+
+  function buildGrid() {
+    canvasEl.innerHTML = '';
+    grid = []; undoStack = [];
+    CELL = cellPx();
+    canvasEl.style.gridTemplateColumns = `repeat(${SIZE}, ${CELL}px)`;
+    for (let r = 0; r < SIZE; r++) {
+      grid[r] = new Array(SIZE).fill(null);
+      for (let c = 0; c < SIZE; c++) {
+        const cell = document.createElement('div');
+        cell.className = 'grid-cell';
+        cell.style.width = CELL + 'px';
+        cell.style.height = CELL + 'px';
+        cell.dataset.row = r;
+        cell.dataset.col = c;
+        cell.addEventListener('click', () => paint(r, c));
+        cell.addEventListener('mouseenter', e => { if (e.buttons === 1) paint(r, c); });
+        canvasEl.appendChild(cell);
+      }
+    }
+    updateStatus();
+  }
+
+  function getCell(r, c) {
+    return canvasEl.querySelector(`[data-row="${r}"][data-col="${c}"]`);
+  }
+
+  function paint(r, c) {
+    const cell = getCell(r, c);
+    if (!cell) return;
+    const isEraser = currentColor === '#00000000';
+    undoStack.push({ r, c, old: grid[r][c] });
+    if (undoStack.length > 800) undoStack.shift();
+    grid[r][c] = isEraser ? null : currentColor;
+    cell.style.background = isEraser ? '#222' : currentColor;
+    if (!isEraser) cell.classList.add('filled');
+    else cell.classList.remove('filled');
+  }
+
+  // ── 调色板 ──
+  document.getElementById('palette').addEventListener('click', e => {
+    const swatch = e.target.closest('.color-swatch');
+    if (!swatch) return;
+    document.querySelectorAll('.color-swatch').forEach(s => s.classList.remove('current'));
+    swatch.classList.add('current');
+    currentColor = swatch.dataset.color;
+  });
+
+  // ── 按钮 ──
+  document.getElementById('btn-clear').addEventListener('click', () => {
+    for (let r = 0; r < SIZE; r++)
+      for (let c = 0; c < SIZE; c++) {
+        grid[r][c] = null;
+        const cell = getCell(r, c);
+        if (cell) { cell.style.background = '#222'; cell.classList.remove('filled'); }
+      }
+    undoStack = []; updateStatus();
+  });
+
+  document.getElementById('btn-fill').addEventListener('click', () => {
+    for (let r = 0; r < SIZE; r++)
+      for (let c = 0; c < SIZE; c++) paint(r, c);
+    updateStatus();
+  });
+
+  document.getElementById('btn-undo').addEventListener('click', () => {
+    if (!undoStack.length) return;
+    const act = undoStack.pop();
+    grid[act.r][act.c] = act.old;
+    const cell = getCell(act.r, act.c);
+    if (cell) {
+      cell.style.background = act.old || '#222';
+      if (act.old) cell.classList.add('filled');
+      else cell.classList.remove('filled');
+    }
+    updateStatus();
+  });
+
+  document.getElementById('btn-resize').addEventListener('click', () => {
+    SIZE = parseInt(document.getElementById('size-select').value);
+    buildGrid();
+  });
+
+  document.getElementById('btn-export').addEventListener('click', () => {
+    const scale = Math.max(1, Math.floor(512 / SIZE));
+    const c = document.createElement('canvas');
+    c.width = SIZE * scale; c.height = SIZE * scale;
+    const ctx = c.getContext('2d');
+    ctx.imageSmoothingEnabled = false;
+    for (let r = 0; r < SIZE; r++)
+      for (let col = 0; col < SIZE; col++) {
+        const color = grid[r][col];
+        if (color) { ctx.fillStyle = color; ctx.fillRect(col * scale, r * scale, scale, scale); }
+      }
+    const a = document.createElement('a');
+    a.download = 'pixel-art.png'; a.href = c.toDataURL('image/png'); a.click();
+    status.textContent = 'PNG 已导出';
+  });
+
+  function updateStatus() {
+    let n = 0;
+    for (let r = 0; r < SIZE; r++)
+      for (let c = 0; c < SIZE; c++)
+        if (grid[r][c]) n++;
+    status.textContent = `${SIZE}×${SIZE} · ${n}/${SIZE*SIZE}`;
+  }
+
+  document.addEventListener('keydown', e => {
+    if (e.ctrlKey && e.key === 'z') { e.preventDefault(); document.getElementById('btn-undo').click(); }
+  });
+
+  buildGrid();
+</script>
+</body>
+</html>

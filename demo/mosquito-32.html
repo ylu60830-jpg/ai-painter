@@ -1,0 +1,25 @@
+<!DOCTYPE html><html lang="zh-CN"><head><meta charset="UTF-8"><title>🦟 蚊子 32×32</title>
+<style>body{background:#1e1e1e;display:flex;flex-direction:column;align-items:center;justify-content:center;min-height:100vh;font-family:monospace;color:#ccc}canvas{image-rendering:pixelated;border:2px solid #555}span{font-size:11px;color:#888}</style></head>
+<body><h3>🦟 蚊子 32×32 · 侧视图</h3><canvas id="c" width="640" height="640"></canvas>
+<p><span>■</span>轮廓 <span>■</span>身体 <span>■</span>翅膀 <span>■</span>腿 <span>■</span>关节 <span>■</span>复眼 <span>■</span>高光 &nbsp;|&nbsp; 6色 · ~240像素</p>
+<p style="font-size:10px;color:#666">口器→头→胸(驼峰)→腹(分节·尾翘) · 触角+复眼 · 翅膀(半透明+翅脉) · 六腿(关节)</p>
+<script>
+const S=32,X=20,cv=document.getElementById("c"),ctx=cv.getContext("2d");
+cv.width=S*X;cv.height=S*X;ctx.imageSmoothingEnabled=false;
+function p(r,c,cl){ctx.fillStyle=cl;ctx.fillRect(c*X,r*X,X,X)}
+function rect(r1,c1,r2,c2,cl){for(let r=r1;r<=r2;r++)for(let c=c1;c<=c2;c++)p(r,c,cl)}
+function ln(r1,c1,r2,c2,cl){const dr=Math.abs(r2-r1),dc=Math.abs(c2-c1),st=Math.max(dr,dc);for(let i=0;i<=st;i++){const t=st?i/st:0;p(Math.round(r1+(r2-r1)*t),Math.round(c1+(c2-c1)*t),cl)}}
+const D="#111111",B="#555555",G="#999999",W="#B3E5FC",H="#FFFFFF",L="#8D6E63",K="#5D4037",E="#F06292",C="#CD6E58";
+rect(15,1,16,8,D);p(14,8,D);p(17,8,D);
+rect(13,9,17,11,D);rect(13,9,13,10,E);p(14,9,E);p(12,10,D);p(12,11,D);
+p(11,9,L);ln(10,9,7,7,L);p(6,6,L);p(11,12,L);ln(10,12,7,14,L);p(6,15,L);p(5,5,G);p(6,5,G);p(5,16,G);p(6,16,G);
+p(11,14,D);p(11,15,D);rect(12,13,17,17,D);rect(13,14,16,16,C);
+rect(3,16,4,17,W);rect(5,14,6,19,W);rect(7,13,8,21,W);rect(9,13,10,22,W);rect(11,14,12,21,W);
+ln(4,16,12,15,H);ln(4,17,12,18,H);ln(6,15,12,14,H);p(3,16,H);p(3,17,H);p(5,14,H);p(7,13,H);p(9,13,H);
+rect(14,18,17,27,D);rect(15,19,16,26,B);
+p(14,21,G);p(15,21,G);p(16,21,G);p(17,21,G);p(14,24,G);p(15,24,G);p(16,24,G);p(17,24,G);p(15,27,G);p(16,27,G);
+p(14,28,D);p(15,28,D);p(13,27,D);p(15,29,D);
+ln(18,10,22,6,L);ln(22,6,26,8,L);ln(18,13,22,15,L);ln(22,15,26,14,L);ln(18,15,22,17,L);ln(22,17,26,19,L);ln(18,16,22,18,L);ln(22,18,26,20,L);ln(18,20,23,22,L);ln(23,22,27,24,L);ln(18,23,23,25,L);ln(23,25,27,26,L);
+[[22,6],[26,8],[22,15],[26,14],[22,17],[26,19],[22,18],[26,20],[23,22],[27,24],[23,25],[27,26]].forEach(([r,c])=>p(r,c,K));
+p(14,17,H);p(15,17,H);p(15,20,H);p(16,20,H);p(14,3,G);p(14,6,G);p(17,3,G);p(17,6,G);
+</script></body></html>
